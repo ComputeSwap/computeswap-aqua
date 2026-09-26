@@ -69,11 +69,12 @@ contract DeployAquaSepolia is Script {
         uint160 sqrtLo = _sqrtAt(mid / 2);
         uint160 sqrtHi = _sqrtAt(mid * 2);
         uint160 sqrtPrice = _sqrtAt(mid);
-        uint128 liquidity = 10_000e6;
+        uint128 liquidity = uint128(vm.envOr("SEED_LIQUIDITY", uint256(100e6)));
         uint256 need0 = LogCurveMath.getAmount0Delta(sqrtPrice, sqrtHi, liquidity, true);
         uint256 need1 = LogCurveMath.getAmount1Delta(sqrtLo, sqrtPrice, liquidity, true);
         need0 = need0 + need0 / 100 + 1;
         need1 = need1 + need1 / 100 + 1;
+        require(deployer.balance >= need0, "Insufficient Sepolia ETH for WETH seed");
         IWETH9(weth).deposit{value: need0}();
         IERC20Mintable(weth).approve(address(vault), type(uint256).max);
         IERC20Mintable(usdc).approve(address(vault), type(uint256).max);

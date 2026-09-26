@@ -8,7 +8,7 @@ on:
         type: boolean
         default: false
       seed_position:
-        description: Mint one demo LP after deploy (needs Sepolia USDC on deployer)
+        description: Mint demo LP after deploy (~0.01+ ETH WETH + USDC; leave off on low balance)
         type: boolean
         default: false
       init_price_usd:

@@ -32,8 +32,10 @@ Copy `.env.example` to `.env` in the repo root and set:
 
 Optional:
 
-- `SEED_POSITION=true` — mint one demo LP position after deploy (wraps ETH → WETH, spends USDC).
+- `SEED_POSITION=true` — mint one demo LP after deploy (wraps ETH → WETH + USDC). Default liquidity is `100e6` (same as local); override with `SEED_LIQUIDITY`. The old script used `10_000e6` (~2 ETH WETH) — too heavy for a 0.04 ETH wallet.
 - `INIT_PRICE_USD=3000` — initial ETH price in USDC for the seeded range.
+
+With **~0.04 Sepolia ETH**, run with **`SEED_POSITION=false`**: deploying the three contracts alone can consume most of that for gas. Add liquidity later from the UI once you have more ETH/USDC.
 
 ## 3. Broadcast
 
