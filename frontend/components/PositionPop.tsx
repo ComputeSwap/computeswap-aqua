@@ -8,7 +8,7 @@ import { fEth, fUsdc, toEth, toUsdc } from "@/lib/ui";
 
 export default function PositionPop() {
   const ref = useRef<HTMLDivElement>(null);
-  const { pop, positions, series, pool } = useStore();
+  const { pop, positions, series } = useStore();
   useStore((s) => s.tick);
   const pos = pop && positions.find((p) => p.id === pop.id);
   useEffect(() => {
@@ -26,10 +26,10 @@ export default function PositionPop() {
     document.addEventListener("click", onClick);
     return () => document.removeEventListener("click", onClick);
   }, []);
-  if (!pop || !pos || !pool.initialized) {
+  if (!pop || !pos) {
     return null;
   }
-  const value = toEth(pos.eth) * pool.price + toUsdc(pos.usdc);
+  const value = toEth(pos.eth) * pos.price + toUsdc(pos.usdc);
   const s = series.find((x) => x.id === pos.activeSeries);
   const locked = pos.locked > 0n && !!s && s.expiry > now();
   const free = pos.liquidity - pos.locked;

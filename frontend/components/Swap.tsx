@@ -1,16 +1,11 @@
 "use client";
-import {
-  exclusive,
-  executeSwap,
-  setSwapReceive,
-  updateSwapPreview,
-} from "@/lib/app";
+import { exclusive, executeSwap, setSwapReceive, updateSwapPreview } from "@/lib/app";
 import { useStore } from "@/lib/store";
 import DecimalInput from "./DecimalInput";
 
 export default function Swap() {
   const s = useStore();
-  const positions = s.positions;
+  const pos = s.positions.find((p) => p.id === s.activePoolId) ?? s.positions[0];
   const recvEth = s.swapReceive === "ETH";
   const payTok = recvEth ? "USDC" : "ETH";
   const recvTok = recvEth ? "ETH" : "USDC";
@@ -21,23 +16,8 @@ export default function Swap() {
         void exclusive(executeSwap);
       }}
     >
-      {positions.length > 1 ? (
-        <label className="line">
-          Position{" "}
-          <select
-            value={s.swapPositionId ?? positions[0]?.id ?? ""}
-            onChange={(e) => {
-              useStore.setState({ swapPositionId: Number(e.target.value) });
-              updateSwapPreview();
-            }}
-          >
-            {positions.map((p) => (
-              <option key={p.id} value={p.id}>
-                #{p.id} (${p.pa.toFixed(2)}–${p.pb.toFixed(2)})
-              </option>
-            ))}
-          </select>
-        </label>
+      {!pos ? (
+        <p className="line muted">Select or create a pool in the sidebar to swap.</p>
       ) : null}
       <div className="swap-head">
         <div className="seg">
@@ -87,7 +67,7 @@ export default function Swap() {
           />
         ) : null}
       </p>
-      <button type="submit" disabled={!s.pool.initialized}>
+      <button type="submit" disabled={!pos}>
         Pay {payTok}
       </button>
     </form>

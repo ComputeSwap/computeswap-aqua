@@ -244,7 +244,7 @@ export function drawReserves(canvas, { positions, price, preview }) {
 // ---------------------------------------------------------------------------------------------------------------------
 export function drawLiquidity(
   canvas,
-  { positions, price, previewPrice, ghost, hoverId },
+  { positions, price, previewPrice, ghost, hoverId, focusId },
 ) {
   const { ctx, w, h } = setup(canvas);
   const t = theme();
@@ -298,7 +298,10 @@ export function drawLiquidity(
         ctx.setLineDash([]);
       } else {
         const split = Math.min(Math.max(px, x0), x1);
-        ctx.globalAlpha = hoverId === undefined || hoverId === p.id ? 1 : 0.55;
+        ctx.globalAlpha =
+          hoverId === undefined || hoverId === p.id || focusId === p.id
+            ? 1
+            : 0.45;
         ctx.fillStyle = t.green;
         ctx.fillRect(x0, yTop, split - x0, yBot - yTop);
         ctx.fillStyle = t.navy;

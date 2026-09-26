@@ -13,6 +13,11 @@ import { fmtNum } from "./format";
 import type { HistoryEntry } from "./server/indexer";
 import type { Snapshot } from "./server/state";
 import {
+  activePosition,
+  poolView,
+  resolveActivePoolId,
+} from "./pools";
+import {
   type Contracts,
   now,
   S,
@@ -313,18 +318,13 @@ async function refresh() {
       .filter((x) => seriesNeed.has(x.id))
       .map((x) => ({ ...x, balance: 0n }));
   }
-  const pool = snap.pool.initialized
-    ? {
-        initialized: true as const,
-        tick: 0,
-        price: snap.pool.price as number,
-      }
-    : { initialized: false as const };
-  const swapPositionId =
-    S().swapPositionId &&
-    positions.some((p) => p.id === S().swapPositionId)
-      ? S().swapPositionId
-      : snap.defaultSwapPositionId;
+  const depRef = S().dep as Deployment;
+  const activePoolId = resolveActivePoolId(
+    positions,
+    S().activePoolId,
+    snap.defaultSwapPositionId,
+  );
+  const pool = poolView(positions, activePoolId, depRef);
   set({
     pool,
     positions,
@@ -332,20 +332,20 @@ async function refresh() {
     series,
     eth,
     usdc,
-    swapPositionId,
+    activePoolId,
     chainTime: snap.chainTime,
     chainTimeAt: Date.now(),
     chainBlock: snap.block,
   });
-  const depRef = S().dep as Deployment;
-  const refPrice = pool.initialized
-    ? pool.price
-    : (depRef.initPrice ?? 0);
+  const refPrice = pool.initialized ? pool.price : (depRef.initPrice ?? 0);
   if (refPrice > 0 && !S().addHi && !S().addLo) {
     set({
       addLo: String(+(0.5 * refPrice).toPrecision(4)),
       addHi: String(+(2 * refPrice).toPrecision(4)),
     });
+  }
+  if (refPrice > 0 && !S().addSpotPrice) {
+    set({ addSpotPrice: String(+refPrice.toPrecision(6)) });
   }
   await updateAddPreview();
   updateSwapPreview();
@@ -727,10 +727,12 @@ export async function updateAddPreview() {
   };
   set({ addReady: null, addGhost: null, addMsg: null, addInvalid: null }); // until the inputs describe a valid deposit
   const dep = s.dep as Deployment;
+  const spot = parseAmount(s.addSpotPrice);
+  const active = activePosition(s.positions, s.activePoolId);
   const P =
-    s.pool.initialized && s.pool.price > 0
-      ? s.pool.price
-      : (dep.initPrice ?? 1);
+    spot > 0
+      ? spot
+      : active?.price ?? (dep.initPrice ?? 1);
   const value = parseAmount(s.addValue);
   let lo = parseAmount(s.addLo);
   let hi = parseAmount(s.addHi);
@@ -884,8 +886,15 @@ export async function executeAdd() {
   );
   const ev = receipt && parseLogs(receipt, c.vault, "PositionMinted");
   if (ev) {
-    openSplit(Number(ev.args.positionId));
+    const id = Number(ev.args.positionId);
+    selectPool(id);
+    openSplit(id);
   }
+}
+
+export function selectPool(id: number) {
+  set({ activePoolId: id, pop: null, swapPay: "", swapRecv: "" });
+  updateSwapPreview();
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -908,14 +917,13 @@ export function openSplit(positionId: number) {
 export function updateSplit() {
   const s = S();
   const pos = s.positions.find((p) => p.id === s.splitFor);
-  if (!pos || !s.pool.initialized) {
+  if (!pos) {
     return;
   }
   const L = pos.L * splitShare();
-  // start at the most the weight can ever pay (its value at pa), fall to what exercising pays today
   set({
     auctionStart: (L * (1 - pos.pa / pos.pb)).toFixed(2),
-    auctionFloor: C.ethLegValue({ ...pos, L }, s.pool.price).toFixed(2),
+    auctionFloor: C.ethLegValue({ ...pos, L }, pos.price).toFixed(2),
   });
 }
 
@@ -1078,8 +1086,7 @@ type SimResult = { ok: false; reason: string } | ({ ok: true } & Sim);
 
 function swapTarget() {
   const s = S();
-  const id = s.swapPositionId ?? s.positions[0]?.id;
-  return s.positions.find((p) => p.id === id) ?? null;
+  return activePosition(s.positions, s.activePoolId);
 }
 
 const simulate = (
@@ -1150,7 +1157,8 @@ export function updateSwapPreview() {
   if (quoteTimer) {
     clearTimeout(quoteTimer);
   }
-  if (!s.pool.initialized || !(amount > 0)) {
+  const pos = swapTarget();
+  if (!pos || !(amount > 0)) {
     set({ swapMsg: null });
     if (!(amount > 0)) {
       set(s.swapLead === "pay" ? { swapRecv: "" } : { swapPay: "" });
@@ -1238,8 +1246,8 @@ async function quoteOnChain(shape: Shape, amount: number) {
 export async function executeSwap() {
   const s = S();
   const pos = swapTarget();
-  if (!s.pool.initialized || !pos) {
-    return;
+  if (!pos) {
+    return toast("Select a pool to trade against.", "err");
   }
   const c = s.c as Contracts;
   const dep = s.dep as Deployment;

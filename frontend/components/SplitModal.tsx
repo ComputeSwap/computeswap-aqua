@@ -11,7 +11,7 @@ export default function SplitModal() {
   const s = useStore();
   const set = useStore.setState;
   const pos = s.positions.find((p) => p.id === s.splitFor);
-  if (!pos || !s.pool.initialized) {
+  if (!pos) {
     return null;
   }
   const share = Math.min(Math.max(parseAmount(s.splitShare) / 100, 0.0001), 1);
@@ -68,7 +68,7 @@ export default function SplitModal() {
           pa={pos.pa}
           pb={pos.pb}
           L={L}
-          price={s.pool.price}
+          price={pos.price}
           lines={lines}
           className="chart small"
         />

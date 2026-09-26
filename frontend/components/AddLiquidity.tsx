@@ -1,5 +1,6 @@
 "use client";
 import { addChanged, exclusive, executeAdd } from "@/lib/app";
+import { canCreatePool } from "@/lib/pools";
 import { useStore } from "@/lib/store";
 import DecimalInput from "./DecimalInput";
 
@@ -11,8 +12,13 @@ export default function AddLiquidity() {
       set({ addActive: on });
     }
   };
-  if (!s.pool.initialized) {
-    return null;
+  if (!canCreatePool(s.dep, s.positions)) {
+    return (
+      <p className="line muted">
+        No deployment reference price — set initPrice in deployments.json or
+        wait for an indexed pool.
+      </p>
+    );
   }
   return (
     <form
@@ -36,7 +42,7 @@ export default function AddLiquidity() {
         );
       }}
     >
-      <div className="fields">
+      <div className="fields fields-four">
         <label>
           Amount ($)
           <DecimalInput
@@ -45,6 +51,18 @@ export default function AddLiquidity() {
             className={s.addInvalid === "addValue" ? "invalid" : ""}
             onValue={(v) => {
               set({ addValue: v });
+              addChanged();
+            }}
+          />
+        </label>
+        <label>
+          Spot at deposit ($)
+          <DecimalInput
+            value={s.addSpotPrice}
+            maxDec={12}
+            className={s.addInvalid === "addSpotPrice" ? "invalid" : ""}
+            onValue={(v) => {
+              set({ addSpotPrice: v });
               addChanged();
             }}
           />
@@ -94,7 +112,7 @@ export default function AddLiquidity() {
         ) : null}
       </p>
       <button type="submit" disabled={!s.addReady}>
-        Add liquidity
+        Create pool
       </button>
     </form>
   );

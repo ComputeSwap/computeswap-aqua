@@ -1,19 +1,25 @@
 "use client";
 import { connectWallet, faucet, scheduleRefresh, setAccount } from "@/lib/app";
 import { fmtNum } from "@/lib/format";
+import { activePosition } from "@/lib/pools";
 import { useStore } from "@/lib/store";
 import { fEth, fUsdc, NAMES, short } from "@/lib/ui";
 
 export default function Header() {
-  const { dep, local, me, signers, eth, usdc, pool } = useStore();
+  const { dep, local, me, signers, eth, usdc, positions, activePoolId } =
+    useStore();
+  const active = activePosition(positions, activePoolId);
   return (
     <header className="bar">
       <div className="brand">
         x·e<sup>y</sup>{" "}
-        <span className="num">
-          {pool.initialized ? `$${fmtNum(pool.price, 4)}` : ""}
-        </span>{" "}
-        <span className="net muted">{local ? "" : dep?.chainName || ""}</span>
+        <span className="net muted">{local ? "local" : dep?.chainName || ""}</span>
+        {positions.length ? (
+          <span className="brand-meta num muted">
+            {positions.length} pool{positions.length === 1 ? "" : "s"}
+            {active ? ` · active $${fmtNum(active.price, 4)}` : ""}
+          </span>
+        ) : null}
       </div>
       <div className="bar-right">
         {local ? (

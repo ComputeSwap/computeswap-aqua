@@ -1,5 +1,4 @@
 "use client";
-// The page: starts the app once, then lays out the two columns. State comes from lib/store.ts.
 import { useEffect } from "react";
 import { init, stop } from "@/lib/app";
 import type { Deployment } from "@/lib/config";
@@ -9,6 +8,7 @@ import DebugToggle from "./DebugToggle";
 import Header from "./Header";
 import History from "./History";
 import LiquidityChart from "./LiquidityChart";
+import PoolList from "./PoolList";
 import PositionPop from "./PositionPop";
 import ReservesChart from "./ReservesChart";
 import SplitModal from "./SplitModal";
@@ -48,25 +48,60 @@ export default function App({ dep }: { dep: Deployment | null }) {
   return (
     <>
       <Header />
-      <main className="cols">
-        <section>
-          <h2>Add liquidity</h2>
-          <AddLiquidity />
+      <div className="shell">
+        <div className="shell-rail">
+          <PoolList />
           <LiquidityChart />
-          <h2>History</h2>
-          <History />
-        </section>
-        <section>
-          <h2>Swap</h2>
-          <Swap />
-          <ReservesChart />
-          <Weights />
-        </section>
-      </main>
+        </div>
+        <main className="shell-main">
+          <section className="panel">
+            <h2>Create pool</h2>
+            <p className="section-lead muted">
+              Mint a new Aqua strategy with your price range and spot price at
+              deposit.
+            </p>
+            <AddLiquidity />
+          </section>
+          <div className="cols trade-cols">
+            <section className="panel">
+              <TradeHeading />
+              <Swap />
+              <ReservesChart />
+            </section>
+            <section className="panel">
+              <h2>ETH weights</h2>
+              <Weights />
+            </section>
+          </div>
+          <section className="panel panel-wide">
+            <h2>History</h2>
+            <History />
+          </section>
+        </main>
+      </div>
       <PositionPop />
       <SplitModal />
       <DebugToggle />
       <Toast />
     </>
+  );
+}
+
+function TradeHeading() {
+  const activePoolId = useStore((s) => s.activePoolId);
+  const positions = useStore((s) => s.positions);
+  const active = positions.find((p) => p.id === activePoolId) ?? positions[0];
+  return (
+    <h2>
+      Trade
+      {active ? (
+        <span className="h2-sub num muted">
+          {" "}
+          · Pool #{active.id} @ ${active.price.toFixed(4)}
+        </span>
+      ) : (
+        <span className="h2-sub muted"> · create a pool first</span>
+      )}
+    </h2>
   );
 }

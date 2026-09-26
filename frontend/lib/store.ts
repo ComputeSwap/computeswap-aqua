@@ -73,7 +73,7 @@ export type State = {
   me: string | null;
   c: Contracts | null;
   pool: Pool;
-  swapPositionId: number | null;
+  activePoolId: number | null;
   positions: Position[];
   series: Series[]; // live auctions' and locked positions' series, plus the ones you hold
   auctions: Auction[];
@@ -94,6 +94,7 @@ export type State = {
   addValue: string;
   addLo: string;
   addHi: string;
+  addSpotPrice: string;
   add5050: boolean;
   addMsg: Msg;
   addInvalid: string | null;
@@ -142,7 +143,7 @@ export const useStore = create<State>(() => ({
   me: null,
   c: null,
   pool: { initialized: false },
-  swapPositionId: null,
+  activePoolId: null,
   positions: [],
   series: [],
   auctions: [],
@@ -162,6 +163,7 @@ export const useStore = create<State>(() => ({
   addValue: "100",
   addLo: "",
   addHi: "",
+  addSpotPrice: "",
   add5050: true,
   addMsg: null,
   addInvalid: null,
