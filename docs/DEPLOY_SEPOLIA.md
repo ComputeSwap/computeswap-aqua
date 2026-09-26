@@ -78,16 +78,18 @@ Connect MetaMask to Sepolia; use WETH + USDC (not native ETH for swaps/add liqui
 
 Workflow: **Deploy Aqua Sepolia** (`.github/workflows/deploy-aqua-sepolia.yml`), manual dispatch only.
 
-Create a GitHub **environment** named `aqua-sepolia` (Settings → Environments) and add repository secrets:
+Create a GitHub **environment** named `testnet-sepolia` (Settings → Environments → Environment secrets) and add:
 
 | Secret | Required | Purpose |
 |--------|----------|---------|
-| `AQUA_SEPOLIA_DEPLOYER_PRIVATE_KEY` | For broadcast | Deployer wallet (with `0x` prefix) |
-| `AQUA_TREASURY_ADDRESS` | Yes | Auction treasury (`WeightAuction` constructor) |
-| `AQUA_SEPOLIA_RPC_URL` | Recommended | Sepolia RPC (Alchemy/Infura); falls back to public RPC for simulate |
-| `ETHERSCAN_API_KEY` | For verify | Contract verification on broadcast |
-| `AQUA_SEPOLIA_RPC_PUBLIC_URL` | Optional | RPC written into `frontend/deployments.json` (omit to reuse `AQUA_SEPOLIA_RPC_URL`) |
+| `TREASURY_ADDRESS` | Yes | Auction treasury (`WeightAuction` constructor) |
+| `AQUA_SEPOLIA_DEPLOYER_PRIVATE_KEY` or `PRIVATE_KEY` | For broadcast | Deployer wallet (with `0x` prefix) |
+| `SEPOLIA_RPC_URL` or `AQUA_SEPOLIA_RPC_URL` | Recommended | Sepolia RPC; simulate can use public fallback |
+| `ETHERSCAN_API_KEY` | For verify | Contract verification when **verify** is enabled |
+| `AQUA_SEPOLIA_RPC_PUBLIC_URL` | Optional | RPC in `frontend/deployments.json` (use a public URL if the indexer RPC is private) |
 | `AQUA_ADDRESS` / `WETH_ADDRESS` / `USDC_ADDRESS` | Optional | Override defaults in `DeployAquaSepolia.s.sol` |
+
+Alias `AQUA_TREASURY_ADDRESS` is still accepted if you prefer that name over `TREASURY_ADDRESS`.
 
 Run with **broadcast** unchecked to simulate; check **broadcast** for a live deploy. Successful broadcasts upload `deployments.json` as artifact `deployments-aqua-sepolia`.
 

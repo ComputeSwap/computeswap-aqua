@@ -27,7 +27,7 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: aqua-sepolia
+    environment: testnet-sepolia
     permissions:
       contents: read
     steps:
@@ -43,8 +43,11 @@ jobs:
         env:
           INIT_PRICE_USD: ${{ inputs.init_price_usd }}
           SEED_POSITION: ${{ inputs.seed_position && 'true' || 'false' }}
-          TREASURY_ADDRESS: ${{ secrets.AQUA_TREASURY_ADDRESS }}
+          TREASURY_ADDRESS_SECRET: ${{ secrets.TREASURY_ADDRESS }}
+          AQUA_TREASURY_ADDRESS: ${{ secrets.AQUA_TREASURY_ADDRESS }}
+          SEPOLIA_RPC_URL: ${{ secrets.SEPOLIA_RPC_URL }}
           AQUA_SEPOLIA_RPC_URL: ${{ secrets.AQUA_SEPOLIA_RPC_URL }}
+          PRIVATE_KEY_SECRET: ${{ secrets.PRIVATE_KEY }}
           AQUA_SEPOLIA_DEPLOYER_PRIVATE_KEY: ${{ secrets.AQUA_SEPOLIA_DEPLOYER_PRIVATE_KEY }}
           ETHERSCAN_API_KEY: ${{ secrets.ETHERSCAN_API_KEY }}
           RPC_PUBLIC_URL: ${{ secrets.AQUA_SEPOLIA_RPC_PUBLIC_URL }}
@@ -53,21 +56,23 @@ jobs:
           USDC_ADDRESS: ${{ secrets.USDC_ADDRESS }}
         run: |
           set -euo pipefail
-          RPC="${AQUA_SEPOLIA_RPC_URL:-https://ethereum-sepolia-rpc.publicnode.com}"
-          export RPC_PUBLIC_URL="${RPC_PUBLIC_URL:-$RPC}"
-          if [ -z "${TREASURY_ADDRESS:-}" ]; then
-            echo "Set secret AQUA_TREASURY_ADDRESS (auction fee recipient)."
+          export TREASURY_ADDRESS="${TREASURY_ADDRESS_SECRET:-${AQUA_TREASURY_ADDRESS:-}}"
+          if [ -z "${TREASURY_ADDRESS}" ]; then
+            echo "Set environment secret TREASURY_ADDRESS (auction fee recipient)."
             exit 1
           fi
+          RPC="${AQUA_SEPOLIA_RPC_URL:-${SEPOLIA_RPC_URL:-https://ethereum-sepolia-rpc.publicnode.com}}"
+          export RPC_PUBLIC_URL="${RPC_PUBLIC_URL:-$RPC}"
+          DEPLOY_KEY="${AQUA_SEPOLIA_DEPLOYER_PRIVATE_KEY:-${PRIVATE_KEY_SECRET:-}}"
           SIM_KEY="0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
-          export PRIVATE_KEY="${AQUA_SEPOLIA_DEPLOYER_PRIVATE_KEY:-$SIM_KEY}"
+          export PRIVATE_KEY="${DEPLOY_KEY:-$SIM_KEY}"
           ARGS=(--rpc-url "$RPC" --private-key "$PRIVATE_KEY")
           if [ "${{ inputs.broadcast }}" = "true" ]; then
-            if [ -z "${AQUA_SEPOLIA_DEPLOYER_PRIVATE_KEY:-}" ]; then
-              echo "Set secret AQUA_SEPOLIA_DEPLOYER_PRIVATE_KEY before broadcasting."
+            if [ -z "${DEPLOY_KEY}" ]; then
+              echo "Set AQUA_SEPOLIA_DEPLOYER_PRIVATE_KEY or PRIVATE_KEY before broadcasting."
               exit 1
             fi
-            export PRIVATE_KEY="$AQUA_SEPOLIA_DEPLOYER_PRIVATE_KEY"
+            export PRIVATE_KEY="$DEPLOY_KEY"
             ARGS=(--rpc-url "$RPC" --broadcast --slow --private-key "$PRIVATE_KEY")
             if [ "${{ inputs.verify }}" = "true" ] && [ -n "${ETHERSCAN_API_KEY:-}" ]; then
               ARGS+=(--verify --etherscan-api-key "$ETHERSCAN_API_KEY")
