@@ -349,6 +349,26 @@ contract AquaIntegrationTest is Test {
         assertEq(usdc.balanceOf(newOwner) - newOwnerUSDC, other);
     }
 
+    function test_flashManipulationBlocked() public {
+        vm.prank(lp);
+        uint256 seriesId = vault.split(positionId, LIQUIDITY, 0, 5 days);
+        vm.prank(lp);
+        weights.transfer(buyer, seriesId, LIQUIDITY);
+        vm.warp(block.timestamp + 1 hours);
+        (uint256 fairEth,,,,) = vault.previewExercise(seriesId, LIQUIDITY);
+        weth.mint(trader, 500 ether);
+        vm.startPrank(trader);
+        ComputeAquaApp.Strategy memory strategy = vault.strategyOf(positionId);
+        app.swapExactIn(strategy, true, 40 ether, 0, trader, block.timestamp);
+        vm.stopPrank();
+        (uint256 inflatedEth,, bool allowed, int24 tick, int24 emaTick) = vault.previewExercise(seriesId, LIQUIDITY);
+        assertGt(inflatedEth, fairEth);
+        assertFalse(allowed);
+        vm.prank(buyer);
+        vm.expectRevert(abi.encodeWithSelector(AquaWeightVault.OracleDeviation.selector, tick, emaTick));
+        vault.exercise(seriesId, LIQUIDITY, 0, block.timestamp);
+    }
+
     function testFuzz_aquaBackingAcrossSwapsAndPartialWithdrawals(uint96 seed) public {
         for (uint256 i; i < 8; ++i) {
             ComputeAquaApp.Strategy memory strategy = vault.strategyOf(positionId);

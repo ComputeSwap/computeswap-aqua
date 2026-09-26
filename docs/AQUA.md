@@ -14,7 +14,7 @@ The Uniswap hook manages a pooled price across many ranges, while Aqua records v
 
 For a strategy with liquidity `L`, price `P`, and range `[p_a,p_b]`, the app uses the same reserves as the hook: `x(P)=L(1/P−1/p_b)` and `y(P)=L ln(P/p_a)`. Swap input is reduced by `feeBps` before applying the curve; the full input is pushed through Aqua, so fees remain in the maker wallet. The vault calculates fees as Aqua's virtual balance above the geometric principal and pays them pro rata on removal.
 
-This design **does not** recreate Uniswap's shared pool price, cross-range routing, native ETH support, or Aqua's usual LP-wallet self-custody. Each Aqua position is independently priced and uses ERC-20 WETH/USDC. A router or UI must select a particular position strategy; an Aqua swap is not interchangeable with a Uniswap pool swap. This is the intentional tradeoff for preserving exercisable weight rights and fully backed positions.
+This design **does not** recreate a shared pool price, cross-range routing, native ETH support, or Aqua's usual LP-wallet self-custody. Each Aqua position is independently priced and uses ERC-20 WETH/USDC. A router or UI must select a particular position strategy. This is the intentional tradeoff for preserving exercisable weight rights and fully backed positions.
 
 ## Install and test
 
@@ -43,7 +43,7 @@ forge script script/DeployAquaLocal.s.sol:DeployAquaLocal \
   --rpc-url http://127.0.0.1:8546 --broadcast
 ```
 
-The script deploys Aqua core, the ComputeSwap Aqua app, vault, weight token, auction, mock WETH/USDC, and a funded example LP position. It prints all addresses. The current `frontend/` is still the **Uniswap v4 UI** and is not connected to this Aqua deployment; do not point it at the Aqua addresses without a dedicated Aqua frontend adapter.
+The script deploys Aqua core, the ComputeSwap Aqua app, vault, weight token, auction, mock WETH/USDC, and a funded example LP position. It prints all addresses. There is no bundled UI; integrators call the contracts directly or build a router/frontend against `ComputeAquaApp` and `AquaWeightVault`.
 
 For a chain with an existing Aqua core, `script/DeployAquaApp.s.sol` deploys only the ComputeSwap app, vault, and auction. It reads `AQUA_ADDRESS`, `TREASURY_ADDRESS`, and `PRIVATE_KEY` from the environment; verify the Aqua address for that chain in [1inch's official deployment documentation](https://business.1inch.com/portal/documentation/aqua/getting-started/build-an-aquaapp) before broadcasting. This script has **not** been broadcast to a public network.
 

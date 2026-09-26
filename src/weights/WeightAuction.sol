@@ -13,7 +13,7 @@ import {WeightToken} from "./WeightToken.sol";
 ///         `dropDuration`, and stays at `floorPrice` until the weights expire. During the drop and floor phases anyone
 ///         can buy any part of what is left at the current price. A protocol fee applies to the seller's premium above
 ///         the floor. The seller can cancel and take back the unsold part at any time. Weights keep all their rights
-///         once sold (see WeightVault).
+///         once sold (see AquaWeightVault).
 contract WeightAuction is ReentrancyGuard {
     error InvalidAuction();
     error OutlivesWeights();

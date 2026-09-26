@@ -5,7 +5,7 @@ import {ERC6909} from "solady/tokens/ERC6909.sol";
 import {LibString} from "solady/utils/LibString.sol";
 
 /// @title WeightToken - ERC-6909 claims on one leg ("weight") of a split LP position
-/// @notice Token id = series id. One unit is the right, until the series expires, to make the WeightVault withdraw one
+/// @notice Token id = series id. One unit is the right, until the series expires, to make the vault withdraw one
 ///         unit of the position's liquidity L at the current price and receive that unit's leg: x(P) of currency0
 ///         (the ETH weight) or y(P) of currency1 (the USDC weight). The other leg goes to the position's owner.
 ///         Units of a series are fungible and can be sold in part; different series are different ids.
