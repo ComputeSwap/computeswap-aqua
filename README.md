@@ -70,7 +70,7 @@ cd frontend && npm install && npm run dev
 
 Open http://localhost:3000 — use **Mint test tokens** for WETH/USDC, then add liquidity, swap against a position, split weights, and run auctions.
 
-**Vercel:** repo-root `vercel.json` runs install/build in `frontend/`. Prefer also setting **Root Directory → `frontend`** and clearing any custom **Build Command** override in the dashboard if builds still fail.
+**Vercel:** project **Root Directory** must be `frontend` (Settings → Build & Deployment). Config lives in `frontend/vercel.json`. Do not add a repo-root `package.json` / `vercel.json` that builds with `--prefix frontend` — Vercel will look for `.next` in the wrong place.
 
 **Aqua testnet (Ethereum Sepolia):** step-by-step in [docs/DEPLOY_SEPOLIA.md](docs/DEPLOY_SEPOLIA.md).
 
