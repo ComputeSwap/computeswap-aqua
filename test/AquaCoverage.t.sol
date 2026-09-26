@@ -89,20 +89,46 @@ contract AquaCoverageTest is AquaFixture {
         assertEq(vaultLocal.owed(blockedOwner, address(blockedUsdc)), 0);
     }
 
-    function test_exerciseUsdcLegPaysBuyerUsdc() public {
+    function test_exerciseUsdcLegMatchesPreview() public {
         vm.prank(lp);
         uint256 seriesId = vault.split(positionId, LIQUIDITY / 2, 1, 2 days);
         vm.prank(lp);
         weights.transfer(buyer, seriesId, LIQUIDITY / 2);
         vm.warp(block.timestamp + 1 hours);
+        (uint256 previewLeg, uint256 previewOther, bool allowed,,) =
+            vault.previewExercise(seriesId, LIQUIDITY / 2);
+        assertTrue(allowed);
         uint256 buyerUsdcBefore = usdc.balanceOf(buyer);
         uint256 lpWethBefore = weth.balanceOf(lp);
         vm.prank(buyer);
-        (uint256 legUsdc, uint256 otherWeth) = vault.exercise(seriesId, LIQUIDITY / 2, 0, block.timestamp);
-        assertGt(legUsdc, 0);
-        assertGt(otherWeth, 0);
-        assertEq(usdc.balanceOf(buyer) - buyerUsdcBefore, legUsdc);
-        assertGe(weth.balanceOf(lp) - lpWethBefore, otherWeth);
+        (uint256 legUsdc, uint256 otherWeth) = vault.exercise(seriesId, LIQUIDITY / 2, previewLeg, block.timestamp);
+        assertEq(legUsdc, previewLeg);
+        assertEq(otherWeth, previewOther);
+        assertEq(usdc.balanceOf(buyer) - buyerUsdcBefore, previewLeg);
+        assertGe(weth.balanceOf(lp) - lpWethBefore, previewOther);
+    }
+
+    function test_swapRevertsPriceOutOfRangePastLower() public {
+        uint160 tightLower = LogCurveMath.getNextSqrtPriceFromAmount0(current, LIQUIDITY, 0.997 ether, true);
+        vm.prank(lp);
+        (uint256 pid,,) = vault.mint(
+            address(weth),
+            address(usdc),
+            tightLower,
+            upper,
+            current,
+            LIQUIDITY,
+            30,
+            type(uint256).max,
+            type(uint256).max,
+            block.timestamp
+        );
+        ComputeAquaApp.Strategy memory strategy = vault.strategyOf(pid);
+        vm.prank(trader);
+        app.swapExactIn(strategy, true, 0.997 ether, 0, trader, block.timestamp);
+        vm.prank(trader);
+        vm.expectRevert(ComputeAquaApp.PriceOutOfRange.selector);
+        app.swapExactIn(strategy, true, 0.5 ether, 0, trader, block.timestamp);
     }
 
     function test_swapRevertsPriceOutOfRangePastUpper() public {
@@ -257,6 +283,66 @@ contract AquaCoverageTest is AquaFixture {
         vm.prank(trader);
         vm.expectRevert(ComputeAquaApp.InactiveStrategy.selector);
         app.swapExactIn(strategy, true, 1 ether, 0, trader, block.timestamp);
+    }
+
+    function test_swapRevertsToMaker() public {
+        ComputeAquaApp.Strategy memory strategy = vault.strategyOf(positionId);
+        vm.prank(trader);
+        vm.expectRevert(ComputeAquaApp.InvalidStrategy.selector);
+        app.swapExactIn(strategy, true, 1 ether, 0, address(vault), block.timestamp);
+    }
+
+    function test_exerciseSlippageDeadlineAndMergeAccess() public {
+        vm.prank(lp);
+        uint256 seriesId = vault.split(positionId, LIQUIDITY / 2, 0, 2 days);
+        vm.prank(lp);
+        weights.transfer(buyer, seriesId, LIQUIDITY / 4);
+        vm.warp(block.timestamp + 1 hours);
+        (uint256 previewLeg,,,,) = vault.previewExercise(seriesId, LIQUIDITY / 4);
+        vm.prank(buyer);
+        vm.expectRevert(AquaWeightVault.Slippage.selector);
+        vault.exercise(seriesId, LIQUIDITY / 4, previewLeg + 1, block.timestamp);
+        vm.prank(buyer);
+        vm.expectRevert(AquaWeightVault.DeadlineExpired.selector);
+        vault.exercise(seriesId, LIQUIDITY / 4, 0, block.timestamp - 1);
+        vm.prank(stranger);
+        vm.expectRevert(AquaWeightVault.NotOwnerOrApproved.selector);
+        vault.merge(seriesId, 1);
+    }
+
+    function test_auctionClosedAfterWeightExpiryAndCancelPartial() public {
+        vm.prank(lp);
+        uint256 seriesId = vault.split(positionId, LIQUIDITY / 2, 0, 30 minutes);
+        vm.prank(lp);
+        uint256 auctionId = auction.create(seriesId, LIQUIDITY / 2, address(usdc), 10e6, 5e6, 20 minutes);
+        vm.roll(block.number + 1);
+        uint128 lot = LIQUIDITY / 4;
+        uint256 cost = auction.quote(auctionId, lot);
+        vm.prank(buyer);
+        auction.buy(auctionId, lot, cost);
+        assertEq(_auctionRemaining(auctionId), lot);
+        vm.prank(lp);
+        auction.cancel(auctionId);
+        assertEq(weights.balanceOf(lp, seriesId), LIQUIDITY / 4);
+        vm.warp(block.timestamp + 31 minutes);
+        vm.prank(buyer);
+        vm.expectRevert(WeightAuction.AuctionClosed.selector);
+        auction.buy(auctionId, 1, type(uint256).max);
+    }
+
+    function test_exercisePreviewMatchesEthLeg() public {
+        vm.prank(lp);
+        uint256 seriesId = vault.split(positionId, LIQUIDITY / 4, 0, 2 days);
+        vm.prank(lp);
+        weights.transfer(buyer, seriesId, LIQUIDITY / 4);
+        vm.warp(block.timestamp + 1 hours);
+        (uint256 previewLeg, uint256 previewOther, bool allowed,,) =
+            vault.previewExercise(seriesId, LIQUIDITY / 4);
+        assertTrue(allowed);
+        vm.prank(buyer);
+        (uint256 leg, uint256 other) = vault.exercise(seriesId, LIQUIDITY / 4, previewLeg, block.timestamp);
+        assertEq(leg, previewLeg);
+        assertEq(other, previewOther);
     }
 
     function _auctionRemaining(uint256 auctionId) internal view returns (uint128 remaining) {

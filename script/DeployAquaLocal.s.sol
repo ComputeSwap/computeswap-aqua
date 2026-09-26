@@ -11,7 +11,6 @@ import {ComputeAquaApp} from "../src/aqua/ComputeAquaApp.sol";
 import {AquaWeightVault} from "../src/aqua/AquaWeightVault.sol";
 import {WeightAuction} from "../src/weights/WeightAuction.sol";
 
-/// @notice Deploys a complete local ComputeSwap-on-Aqua demo. Aqua — © Degensoft Ltd 2025.
 contract DeployAquaLocal is Script {
     function run() external {
         uint256 deployerKey = vm.envUint("PRIVATE_KEY");
@@ -40,6 +39,16 @@ contract DeployAquaLocal is Script {
             block.timestamp + 1 hours
         );
         vm.stopBroadcast();
+        _writeJson(
+            address(aqua),
+            address(app),
+            address(vault),
+            address(vault.weights()),
+            address(auction),
+            address(weth),
+            address(usdc),
+            block.number
+        );
         console2.log("Aqua core", address(aqua));
         console2.log("ComputeAquaApp", address(app));
         console2.log("AquaWeightVault", address(vault));
@@ -48,6 +57,36 @@ contract DeployAquaLocal is Script {
         console2.log("WETH", address(weth));
         console2.log("USDC", address(usdc));
         console2.log("Initial position ID", positionId);
+        console2.log("wrote frontend/deployments.json");
+    }
+
+    function _writeJson(
+        address aqua,
+        address app,
+        address vault,
+        address weights,
+        address auction,
+        address weth,
+        address usdc,
+        uint256 startBlock
+    ) internal {
+        string memory o = "deployments";
+        vm.serializeUint(o, "chainId", block.chainid);
+        vm.serializeString(o, "chainName", "Local Aqua");
+        vm.serializeString(o, "rpc", "http://127.0.0.1:8546");
+        vm.serializeUint(o, "startBlock", startBlock);
+        vm.serializeAddress(o, "aqua", aqua);
+        vm.serializeAddress(o, "app", app);
+        vm.serializeAddress(o, "vault", vault);
+        vm.serializeAddress(o, "weights", weights);
+        vm.serializeAddress(o, "weth", weth);
+        vm.serializeAddress(o, "usdc", usdc);
+        vm.serializeBool(o, "usdcMintable", true);
+        vm.serializeBool(o, "wethMintable", true);
+        vm.serializeUint(o, "defaultFeeBps", 30);
+        vm.serializeUint(o, "initPrice", 1);
+        string memory json = vm.serializeAddress(o, "auction", auction);
+        vm.writeJson(json, "./frontend/deployments.json");
     }
 
     function _sqrtAt(uint256 humanPriceWad) private pure returns (uint160) {

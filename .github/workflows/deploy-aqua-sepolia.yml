@@ -1,0 +1,84 @@
+name: Deploy Aqua Sepolia
+
+on:
+  workflow_dispatch:
+    inputs:
+      broadcast:
+        description: Broadcast on-chain (live deploy)
+        type: boolean
+        default: false
+      seed_position:
+        description: Mint one demo LP after deploy (needs Sepolia USDC on deployer)
+        type: boolean
+        default: false
+      init_price_usd:
+        description: ETH price in USDC for seeded range
+        type: string
+        default: "3000"
+      verify:
+        description: Verify contracts on Etherscan (broadcast only)
+        type: boolean
+        default: true
+
+concurrency:
+  group: deploy-aqua-sepolia
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: aqua-sepolia
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: stable
+
+      - name: Simulate or deploy
+        env:
+          INIT_PRICE_USD: ${{ inputs.init_price_usd }}
+          SEED_POSITION: ${{ inputs.seed_position && 'true' || 'false' }}
+          TREASURY_ADDRESS: ${{ secrets.AQUA_TREASURY_ADDRESS }}
+          AQUA_SEPOLIA_RPC_URL: ${{ secrets.AQUA_SEPOLIA_RPC_URL }}
+          AQUA_SEPOLIA_DEPLOYER_PRIVATE_KEY: ${{ secrets.AQUA_SEPOLIA_DEPLOYER_PRIVATE_KEY }}
+          ETHERSCAN_API_KEY: ${{ secrets.ETHERSCAN_API_KEY }}
+          RPC_PUBLIC_URL: ${{ secrets.AQUA_SEPOLIA_RPC_PUBLIC_URL }}
+          AQUA_ADDRESS: ${{ secrets.AQUA_ADDRESS }}
+          WETH_ADDRESS: ${{ secrets.WETH_ADDRESS }}
+          USDC_ADDRESS: ${{ secrets.USDC_ADDRESS }}
+        run: |
+          set -euo pipefail
+          RPC="${AQUA_SEPOLIA_RPC_URL:-https://ethereum-sepolia-rpc.publicnode.com}"
+          export RPC_PUBLIC_URL="${RPC_PUBLIC_URL:-$RPC}"
+          if [ -z "${TREASURY_ADDRESS:-}" ]; then
+            echo "Set secret AQUA_TREASURY_ADDRESS (auction fee recipient)."
+            exit 1
+          fi
+          SIM_KEY="0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
+          export PRIVATE_KEY="${AQUA_SEPOLIA_DEPLOYER_PRIVATE_KEY:-$SIM_KEY}"
+          ARGS=(--rpc-url "$RPC" --private-key "$PRIVATE_KEY")
+          if [ "${{ inputs.broadcast }}" = "true" ]; then
+            if [ -z "${AQUA_SEPOLIA_DEPLOYER_PRIVATE_KEY:-}" ]; then
+              echo "Set secret AQUA_SEPOLIA_DEPLOYER_PRIVATE_KEY before broadcasting."
+              exit 1
+            fi
+            export PRIVATE_KEY="$AQUA_SEPOLIA_DEPLOYER_PRIVATE_KEY"
+            ARGS=(--rpc-url "$RPC" --broadcast --slow --private-key "$PRIVATE_KEY")
+            if [ "${{ inputs.verify }}" = "true" ] && [ -n "${ETHERSCAN_API_KEY:-}" ]; then
+              ARGS+=(--verify --etherscan-api-key "$ETHERSCAN_API_KEY")
+            fi
+          fi
+          forge script script/DeployAquaSepolia.s.sol:DeployAquaSepolia "${ARGS[@]}"
+
+      - name: Upload deployments.json
+        if: inputs.broadcast
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployments-aqua-sepolia
+          path: frontend/deployments.json
+          retention-days: 90

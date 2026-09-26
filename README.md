@@ -32,6 +32,12 @@ forge build
 forge test
 ```
 
+Run pinned Aqua core tests from the submodule root:
+
+```bash
+cd lib/aqua && forge test
+```
+
 Aqua integration only:
 
 ```bash
@@ -56,13 +62,21 @@ forge script script/DeployAquaLocal.s.sol:DeployAquaLocal \
   --rpc-url http://127.0.0.1:8546 --broadcast
 ```
 
-Deploy against an existing Aqua core:
+Terminal 3 (Next.js UI; reads `frontend/deployments.json` from the deploy script):
 
 ```bash
-export AQUA_ADDRESS=...
-export TREASURY_ADDRESS=...
-export PRIVATE_KEY=...
-forge script script/DeployAquaApp.s.sol:DeployAquaApp --rpc-url ... --broadcast
+cd frontend && npm install && npm run dev
+```
+
+Open http://localhost:3000 — use **Mint test tokens** for WETH/USDC, then add liquidity, swap against a position, split weights, and run auctions.
+
+**Aqua testnet (Ethereum Sepolia):** step-by-step in [docs/DEPLOY_SEPOLIA.md](docs/DEPLOY_SEPOLIA.md).
+
+```bash
+cp .env.example .env   # fill PRIVATE_KEY, TREASURY_ADDRESS, SEPOLIA_RPC_URL
+set -a && source .env && set +a
+forge script script/DeployAquaSepolia.s.sol:DeployAquaSepolia \
+  --rpc-url "$SEPOLIA_RPC_URL" --broadcast --verify
 ```
 
 ## Dependencies
