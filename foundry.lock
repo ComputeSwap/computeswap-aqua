@@ -1,0 +1,14 @@
+{
+  "lib/openzeppelin-contracts": {
+    "tag": {
+      "name": "v5.4.0",
+      "rev": "c64a1edb67b6e3f4a15cca8909c9482ad33a02b0"
+    }
+  },
+  "lib/solidity-utils": {
+    "tag": {
+      "name": "6.9.10",
+      "rev": "2d91bb67665467afc06907a69513b0fa66c46f0d"
+    }
+  }
+}

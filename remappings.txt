@@ -3,5 +3,5 @@ forge-std/=lib/forge-std/src/
 solmate/=lib/solmate/
 solady/=lib/solady/src/
 aqua/=lib/aqua/
-@openzeppelin/contracts/=lib/aqua/node_modules/@openzeppelin/contracts/
-@1inch/solidity-utils/=lib/aqua/node_modules/@1inch/solidity-utils/
+@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/
+@1inch/solidity-utils/=lib/solidity-utils/
