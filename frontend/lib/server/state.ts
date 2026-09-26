@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import { ABI } from "../chain.js";
+import { ABI, strategyTuple } from "../chain.js";
 import * as C from "../curve.js";
 import { type ServerConfig, serverConfig } from "./config";
 
@@ -125,7 +125,6 @@ async function read(cfg: ServerConfig, c: Cache): Promise<Snapshot> {
             c.deadPositions.add(id);
             return null;
           }
-          const strategy = await vault.strategyOf(id);
           let sqrtPrice = 0n;
           let active = false;
           try {
@@ -139,6 +138,7 @@ async function read(cfg: ServerConfig, c: Cache): Promise<Snapshot> {
           const price = C.sqrtPriceToPrice(sqrtPrice);
           const pa = C.sqrtPriceToPrice(pos.sqrtLowerX96);
           const pb = C.sqrtPriceToPrice(pos.sqrtUpperX96);
+          const strategy = strategyTuple(await vault.strategyOf(id));
           const [amount0, amount1] = await app.amountsAt(
             strategy,
             sqrtPrice,

@@ -2,6 +2,19 @@ import { ethers } from "ethers";
 
 export { ethers };
 
+export function strategyTuple(s) {
+  return [
+    s.maker,
+    s.token0,
+    s.token1,
+    s.sqrtLowerX96,
+    s.sqrtUpperX96,
+    s.liquidity,
+    s.feeBps,
+    s.salt,
+  ];
+}
+
 const STRATEGY =
   "tuple(address maker, address token0, address token1, uint160 sqrtLowerX96, uint160 sqrtUpperX96, uint128 liquidity, uint24 feeBps, bytes32 salt)";
 

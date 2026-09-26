@@ -17,8 +17,12 @@ async function open(): Promise<Query> {
       (await sql.query(text, params)) as Row[];
   } else {
     const { PGlite } = await import("@electric-sql/pglite");
+    const serverless =
+      process.env.VERCEL === "1" || !!process.env.AWS_LAMBDA_FUNCTION_NAME;
     const dir = process.env.PGLITE_DIR || ".pglite";
-    const db: PGlite = await PGlite.create(dir);
+    const db: PGlite = serverless
+      ? new PGlite()
+      : await PGlite.create(dir);
     query = async (text, params = []) =>
       (await db.query(text, params)).rows as Row[];
   }

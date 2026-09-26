@@ -1,22 +1,13 @@
 // Everything the page does against the chain and the API: startup, polling, the previews, and the transactions.
 // State lives in lib/store.ts; components only render it and call these.
 import { ethers } from "ethers";
-import { ABI, decodeError } from "./chain.js";
-import {
-  type Deployment,
-  deploymentKey,
-  isLocal,
-  LOCAL_RPC,
-} from "./config";
+import { ABI, decodeError, strategyTuple } from "./chain.js";
+import { type Deployment, deploymentKey, isLocal, LOCAL_RPC } from "./config";
 import * as C from "./curve.js";
 import { fmtNum } from "./format";
+import { activePosition, poolView, resolveActivePoolId } from "./pools";
 import type { HistoryEntry } from "./server/indexer";
 import type { Snapshot } from "./server/state";
-import {
-  activePosition,
-  poolView,
-  resolveActivePoolId,
-} from "./pools";
 import {
   type Contracts,
   now,
@@ -429,11 +420,7 @@ export function loadHistory(): Promise<void> {
   historyLoad = (async () => {
     let { rows, status } = await fetchHistory(S().historyBlock);
     let s = S();
-    if (
-      s.dep &&
-      status &&
-      status.key !== deploymentKey(s.dep as Deployment)
-    ) {
+    if (s.dep && status && status.key !== deploymentKey(s.dep as Deployment)) {
       return; // the server points at another deployment
     }
     if (status && s.historyGen !== null && s.historyGen !== status.generation) {
@@ -504,8 +491,7 @@ function enqueueTx<T>(fn: () => Promise<T>): Promise<T> {
 async function pendingNonce(
   runner: ethers.ContractRunner,
 ): Promise<number | undefined> {
-  const provider =
-    "provider" in runner ? runner.provider : null;
+  const provider = "provider" in runner ? runner.provider : null;
   if (!("getAddress" in runner) || !provider) {
     return undefined;
   }
@@ -561,8 +547,7 @@ export async function call(
 ): Promise<TxResponse> {
   const runner = contract.runner as ethers.ContractRunner | null;
   const nonce = runner ? await pendingNonce(runner) : undefined;
-  const base =
-    nonce === undefined ? overrides : { ...overrides, nonce };
+  const base = nonce === undefined ? overrides : { ...overrides, nonce };
   const estimate = (await contract[method].estimateGas(
     ...args,
     base,
@@ -729,10 +714,7 @@ export async function updateAddPreview() {
   const dep = s.dep as Deployment;
   const spot = parseAmount(s.addSpotPrice);
   const active = activePosition(s.positions, s.activePoolId);
-  const P =
-    spot > 0
-      ? spot
-      : active?.price ?? (dep.initPrice ?? 1);
+  const P = spot > 0 ? spot : (active?.price ?? dep.initPrice ?? 1);
   const value = parseAmount(s.addValue);
   let lo = parseAmount(s.addLo);
   let hi = parseAmount(s.addHi);
@@ -853,14 +835,8 @@ export async function executeAdd() {
   }
   const c = s.c as Contracts;
   const dep = s.dep as Deployment;
-  const {
-    sqrtLower,
-    sqrtUpper,
-    sqrtPrice,
-    liquidity,
-    amount0,
-    amount1,
-  } = s.addReady;
+  const { sqrtLower, sqrtUpper, sqrtPrice, liquidity, amount0, amount1 } =
+    s.addReady;
   const feeBps = dep.defaultFeeBps ?? 30;
   const max0 = amount0 + amount0 / 1000n + 1n;
   const max1 = amount1 + amount1 / 1000n + 1n;
@@ -1099,7 +1075,14 @@ const simulate = (
     return { ok: false, reason: "no active position to swap against" };
   }
   const fee = ((S().dep as Deployment).defaultFeeBps ?? 30) / 10_000;
-  return C.simulateSwap([pos], pos.price, zeroForOne, exactIn, amount, fee) as SimResult;
+  return C.simulateSwap(
+    [pos],
+    pos.price,
+    zeroForOne,
+    exactIn,
+    amount,
+    fee,
+  ) as SimResult;
 };
 
 export function swapShape() {
@@ -1216,10 +1199,7 @@ async function quoteOnChain(shape: Shape, amount: number) {
   const c = s.c as Contracts;
   const dep = s.dep as Deployment;
   const amountRaw = swapAmountRaw(shape, amount);
-  if (
-    shape.zeroForOne &&
-    (await c.weth.allowance(s.me, dep.app)) < amountRaw
-  ) {
+  if (shape.zeroForOne && (await c.weth.allowance(s.me, dep.app)) < amountRaw) {
     return null;
   }
   if (
@@ -1229,7 +1209,7 @@ async function quoteOnChain(shape: Shape, amount: number) {
     return null;
   }
   try {
-    const strategy = await c.vault.strategyOf(pos.id);
+    const strategy = strategyTuple(await c.vault.strategyOf(pos.id));
     const [amountOut] = await c.app.quoteExactIn.staticCall(
       strategy,
       shape.zeroForOne,
@@ -1269,7 +1249,7 @@ export async function executeSwap() {
   } else if (!(await ensureUsdcAllowance(dep.app, amountIn))) {
     return;
   }
-  const strategy = await c.vault.strategyOf(pos.id);
+  const strategy = strategyTuple(await c.vault.strategyOf(pos.id));
   const payAmt = fmtNum(sim.amountIn, shape.inToken === "ETH" ? 6 : 4);
   const recvAmt = fmtNum(sim.amountOut, shape.outToken === "ETH" ? 6 : 4);
   const label = `Pay ${payAmt} ${shape.inToken} for ${recvAmt} ${shape.outToken}`;
