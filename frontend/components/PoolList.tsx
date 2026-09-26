@@ -1,5 +1,5 @@
 "use client";
-import { nameOf, selectPool } from "@/lib/app";
+import { nameOf, openPositionPop, selectPool } from "@/lib/app";
 import { fmtNum } from "@/lib/format";
 import { isMe, useStore } from "@/lib/store";
 import { fEth, fUsdc, toEth, toUsdc } from "@/lib/ui";
@@ -29,11 +29,18 @@ export default function PoolList() {
             const on = activePoolId === p.id;
             const value = toEth(p.eth) * p.price + toUsdc(p.usdc);
             return (
-              <li key={p.id}>
-                <button
-                  type="button"
+              <li key={p.id} className={`pool-list-item${on ? " on" : ""}`}>
+                <div
+                  role="button"
+                  tabIndex={0}
                   className={`pool-card${on ? " on" : ""}`}
                   onClick={() => selectPool(p.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      selectPool(p.id);
+                    }
+                  }}
                 >
                   <div className="pool-card-top">
                     <span className="pool-card-id">Pool #{p.id}</span>
@@ -47,40 +54,22 @@ export default function PoolList() {
                   <div className="pool-card-meta num">
                     {fEth(p.eth, 3)} WETH · {fUsdc(p.usdc, 0)} USDC
                   </div>
-                  <div className="pool-card-foot">
-                    <span className="pool-card-sub muted">
-                      {isMe(p.owner) ? "You" : nameOf(p.owner)} · $
-                      {fmtNum(value, 0)}
-                    </span>
-                    <span
-                      role="button"
-                      tabIndex={0}
-                      className="pool-card-manage"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const r = (
-                          e.currentTarget as HTMLElement
-                        ).getBoundingClientRect();
-                        useStore.setState({
-                          pop: { id: p.id, x: r.right, y: r.bottom + 4 },
-                        });
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          const r = (
-                            e.currentTarget as HTMLElement
-                          ).getBoundingClientRect();
-                          useStore.setState({
-                            pop: { id: p.id, x: r.right, y: r.bottom + 4 },
-                          });
-                        }
-                      }}
-                    >
-                      Manage
-                    </span>
+                  <div className="pool-card-sub muted">
+                    {isMe(p.owner) ? "You" : nameOf(p.owner)} · $
+                    {fmtNum(value, 0)}
                   </div>
+                </div>
+                <button
+                  type="button"
+                  className="pool-card-manage small ghost"
+                  data-pop-trigger
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    selectPool(p.id);
+                    openPositionPop(p.id, e.currentTarget);
+                  }}
+                >
+                  Manage
                 </button>
               </li>
             );

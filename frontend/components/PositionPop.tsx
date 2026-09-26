@@ -18,7 +18,8 @@ export default function PositionPop() {
       if (
         ref.current &&
         !ref.current.contains(t) &&
-        !t?.closest?.("[data-pop-anchor]")
+        !t?.closest?.("[data-pop-anchor]") &&
+        !t?.closest?.("[data-pop-trigger]")
       ) {
         useStore.setState({ pop: null });
       }

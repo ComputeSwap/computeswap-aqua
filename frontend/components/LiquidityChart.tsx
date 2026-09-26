@@ -74,6 +74,7 @@ export default function LiquidityChart() {
       onDoubleClick={(e) => {
         const hit = hitAt(e);
         if (hit && typeof hit.id === "number") {
+          selectPool(hit.id);
           useStore.setState({
             pop: { id: hit.id, x: e.pageX, y: e.pageY },
           });

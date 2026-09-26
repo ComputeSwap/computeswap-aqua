@@ -869,8 +869,25 @@ export async function executeAdd() {
 }
 
 export function selectPool(id: number) {
-  set({ activePoolId: id, pop: null, swapPay: "", swapRecv: "" });
+  const s = S();
+  set({
+    activePoolId: id,
+    pop: s.activePoolId === id ? s.pop : null,
+    swapPay: "",
+    swapRecv: "",
+  });
   updateSwapPreview();
+}
+
+export function openPositionPop(id: number, anchor: HTMLElement) {
+  const r = anchor.getBoundingClientRect();
+  set({
+    pop: {
+      id,
+      x: r.right + window.scrollX,
+      y: r.bottom + window.scrollY,
+    },
+  });
 }
 
 // ---------------------------------------------------------------------------------------------------------------------

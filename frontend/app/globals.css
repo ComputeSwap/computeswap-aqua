@@ -164,6 +164,15 @@ section {
   flex-direction: column;
   gap: 8px;
 }
+.pool-list-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.pool-list-item.on .pool-card {
+  border-color: var(--fg);
+  box-shadow: 0 0 0 1px var(--fg);
+}
 .pool-card {
   width: 100%;
   text-align: left;
@@ -174,6 +183,7 @@ section {
   color: var(--fg);
   font-weight: 400;
   line-height: 1.35;
+  cursor: pointer;
 }
 .pool-card:hover {
   border-color: #ccc;
@@ -182,6 +192,9 @@ section {
 .pool-card.on {
   border-color: var(--fg);
   box-shadow: 0 0 0 1px var(--fg);
+}
+.pool-card-manage {
+  align-self: flex-end;
 }
 .pool-card-top {
   display: flex;
@@ -205,26 +218,33 @@ section {
 .pool-card-meta {
   font-size: 12px;
 }
-.pool-card-foot {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-  margin-top: 6px;
-}
 .pool-card-sub {
   font-size: 11px;
+  margin-top: 6px;
 }
-.pool-card-manage {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--muted);
-  cursor: pointer;
-  flex: none;
+.weights-empty {
+  font-size: 13px;
+  line-height: 1.45;
 }
-.pool-card-manage:hover {
-  color: var(--fg);
-  text-decoration: underline;
+.weights-empty p {
+  margin: 0 0 12px;
+}
+.weights-pool-actions {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.weights-pool-actions li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
 }
 
 /* ---- forms ---- */
