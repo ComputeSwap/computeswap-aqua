@@ -64,6 +64,9 @@ jobs:
           RPC="${AQUA_SEPOLIA_RPC_URL:-${SEPOLIA_RPC_URL:-https://ethereum-sepolia-rpc.publicnode.com}}"
           export RPC_PUBLIC_URL="${RPC_PUBLIC_URL:-$RPC}"
           DEPLOY_KEY="${AQUA_SEPOLIA_DEPLOYER_PRIVATE_KEY:-${PRIVATE_KEY_SECRET:-}}"
+          if [ -n "${DEPLOY_KEY}" ] && [ "${DEPLOY_KEY#0x}" = "$DEPLOY_KEY" ]; then
+            DEPLOY_KEY="0x${DEPLOY_KEY}"
+          fi
           SIM_KEY="0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
           export PRIVATE_KEY="${DEPLOY_KEY:-$SIM_KEY}"
           ARGS=(--rpc-url "$RPC" --private-key "$PRIVATE_KEY")

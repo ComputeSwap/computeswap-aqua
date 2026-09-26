@@ -25,7 +25,7 @@ Confirm addresses in [1inch Aqua docs](https://business.1inch.com/portal/documen
 
 Copy `.env.example` to `.env` in the repo root and set:
 
-- `PRIVATE_KEY` — deployer (never commit).
+- `PRIVATE_KEY` — deployer (never commit). Must be **66 characters with a `0x` prefix** (e.g. `0x` + 64 hex digits). Foundry rejects bare hex from `openssl rand -hex 32` until you prepend `0x`.
 - `TREASURY_ADDRESS` — receives auction protocol fees (often the deployer).
 - `SEPOLIA_RPC_URL` — Alchemy/Infura/public RPC.
 - `ETHERSCAN_API_KEY` — for `--verify` (optional).
@@ -83,7 +83,7 @@ Create a GitHub **environment** named `testnet-sepolia` (Settings → Environmen
 | Secret | Required | Purpose |
 |--------|----------|---------|
 | `TREASURY_ADDRESS` | Yes | Auction treasury (`WeightAuction` constructor) |
-| `AQUA_SEPOLIA_DEPLOYER_PRIVATE_KEY` or `PRIVATE_KEY` | For broadcast | Deployer wallet (with `0x` prefix) |
+| `AQUA_SEPOLIA_DEPLOYER_PRIVATE_KEY` or `PRIVATE_KEY` | For broadcast | Deployer key: `0x` + 64 hex chars (workflow adds `0x` if missing) |
 | `SEPOLIA_RPC_URL` or `AQUA_SEPOLIA_RPC_URL` | Recommended | Sepolia RPC; simulate can use public fallback |
 | `ETHERSCAN_API_KEY` | For verify | Contract verification when **verify** is enabled |
 | `AQUA_SEPOLIA_RPC_PUBLIC_URL` | Optional | RPC in `frontend/deployments.json` (use a public URL if the indexer RPC is private) |
