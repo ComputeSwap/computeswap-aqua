@@ -70,6 +70,8 @@ cd frontend && npm install && npm run dev
 
 Open http://localhost:3000 — use **Mint test tokens** for WETH/USDC, then add liquidity, swap against a position, split weights, and run auctions.
 
+**Vercel:** set project **Root Directory** to `frontend` (not the repo root), then redeploy.
+
 **Aqua testnet (Ethereum Sepolia):** step-by-step in [docs/DEPLOY_SEPOLIA.md](docs/DEPLOY_SEPOLIA.md).
 
 ```bash
