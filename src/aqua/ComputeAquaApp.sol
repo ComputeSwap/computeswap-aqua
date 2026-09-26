@@ -15,7 +15,7 @@ interface IERC20BalanceAquaApp {
 
 /// @title ComputeAquaApp
 /// @notice One concentrated log-curve position per Aqua strategy. Tokens stay in the maker wallet.
-/// @dev Aqua — © Degensoft Ltd 2025. This is a new app; it does not modify Aqua core.
+/// @dev ComputeSwap at ETHGlobal 2026. This is a new app; it does not modify Aqua core.
 contract ComputeAquaApp is ReentrancyGuard {
     error InvalidStrategy();
     error InactiveStrategy();

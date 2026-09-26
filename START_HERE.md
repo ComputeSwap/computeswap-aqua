@@ -26,5 +26,3 @@ forge script script/DeployAquaLocal.s.sol:DeployAquaLocal \
 ```
 
 Details: [docs/AQUA.md](docs/AQUA.md), [README.md](README.md).
-
-Aqua — © Degensoft Ltd 2025.

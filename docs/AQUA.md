@@ -1,6 +1,6 @@
 # ComputeSwap on Aqua
 
-This is a working, contract-level Aqua adaptation of ComputeSwap's log-curve AMM, LP weight vault, and Dutch auction. It uses the **unmodified 1inch Aqua core** as a pinned Git submodule (`lib/aqua`, commit `ef24220ed9647555727b06867bf509cd6959d84b`). Aqua — © Degensoft Ltd 2025.
+This is a working, contract-level Aqua adaptation of ComputeSwap's log-curve AMM, LP weight vault, and Dutch auction. It uses the **unmodified 1inch Aqua core** as a pinned Git submodule (`lib/aqua`, commit `ef24220ed9647555727b06867bf509cd6959d84b`).
 
 ## Architecture and the no-splitting workaround
 
@@ -18,14 +18,14 @@ This design **does not** recreate a shared pool price, cross-range routing, nati
 
 ## Install and test
 
-This standalone ZIP includes the pinned Aqua source and its Solidity dependencies. From the extracted project folder, with Foundry installed:
+From the project folder, with Foundry installed:
 
 ```bash
 forge test --match-contract AquaIntegrationTest -vv
 forge test
 ```
 
-No Git submodule or pnpm installation is needed for this ZIP. The first build may download Solidity 0.8.30. Foundry auto-selects 0.8.30 for the official Aqua core and 0.8.26 for Uniswap's pinned `PoolManager`. The Aqua tests deploy and call the **actual official Aqua contract**, not a mock. They cover shipping, both swap directions, backing across randomized swaps and partial withdrawals, strategy rollover, auction purchase and fee, oracle-gated exercise, final exercise, expiry, and maker isolation.
+Run `git submodule update --init --recursive` if `lib/aqua` is empty. The first build may download Solidity 0.8.30. Foundry auto-selects 0.8.30 for the official Aqua core and 0.8.26 for Uniswap's pinned `PoolManager`. The Aqua tests deploy and call the **actual official Aqua contract**, not a mock. They cover shipping, both swap directions, backing across randomized swaps and partial withdrawals, strategy rollover, auction purchase and fee, oracle-gated exercise, final exercise, expiry, and maker isolation.
 
 ## Run a local demo
 

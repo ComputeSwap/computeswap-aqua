@@ -18,7 +18,7 @@ contract TaxToken is MockERC20 {
 }
 
 /// @notice End-to-end integration against the unmodified 1inch Aqua core at lib/aqua.
-///         Aqua — © Degensoft Ltd 2025.
+///         ComputeSwap at ETHGlobal 2026.
 contract AquaIntegrationTest is AquaFixture {
     function setUp() public {
         setUpAqua();

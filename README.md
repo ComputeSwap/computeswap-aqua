@@ -1,6 +1,6 @@
 # ComputeSwap on Aqua
 
-Log-curve concentrated liquidity, LP weight splits, and Dutch auctions as a **1inch Aqua app**. Uses the unmodified Aqua core in `lib/aqua`. **Powered by Aqua — © Degensoft Ltd 2025.**
+Log-curve concentrated liquidity, LP weight splits, and Dutch auctions as a **1inch Aqua app**. Uses the unmodified Aqua core in `lib/aqua`.
 
 Trading function (USDC per ETH, range \([p_a,p_b]\)):
 

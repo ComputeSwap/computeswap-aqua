@@ -20,7 +20,7 @@ interface IERC20BalanceAquaVault {
 
 /// @title AquaWeightVault
 /// @notice ERC721 LP ownership and ERC6909 leg claims outside Aqua's indivisible strategies.
-/// @dev Aqua — © Degensoft Ltd 2025. The vault is the Aqua maker and keeps each strategy fully backed.
+/// @dev ComputeSwap at ETHGlobal 2026. The vault is the Aqua maker and keeps each strategy fully backed.
 ///      Partial withdrawal/exercise docks a whole strategy and atomically ships the remainder with a fresh salt.
 contract AquaWeightVault is ERC721, ReentrancyGuard {
     error InvalidPosition();

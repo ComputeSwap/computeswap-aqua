@@ -7,7 +7,7 @@ import {ComputeAquaApp} from "../src/aqua/ComputeAquaApp.sol";
 import {AquaWeightVault} from "../src/aqua/AquaWeightVault.sol";
 import {WeightAuction} from "../src/weights/WeightAuction.sol";
 
-/// @notice Deploys only ComputeSwap contracts against an existing Aqua core. Aqua — © Degensoft Ltd 2025.
+/// @notice Deploys only ComputeSwap contracts against an existing Aqua core. ComputeSwap at ETHGlobal 2026.
 contract DeployAquaApp is Script {
     function run() external {
         address aquaAddress = vm.envAddress("AQUA_ADDRESS");
