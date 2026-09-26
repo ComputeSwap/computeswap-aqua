@@ -58,6 +58,8 @@ The script writes `frontend/deployments.json` with Sepolia addresses and `startB
 
 ## 4. Frontend / Vercel
 
+The Next.js app lives in `frontend/`. Git deploys must use that folder as the project root (repo root `vercel.json` sets `"rootDirectory": "frontend"`, or set **Root Directory → `frontend`** in Vercel → Project Settings → Build & Deployment).
+
 1. Commit or upload the updated `frontend/deployments.json`.
 2. In Vercel project settings, set:
    - `INDEXER_RPC_URL` — same Sepolia RPC (server-side).
